@@ -60,5 +60,6 @@ appear before `TFT_eSPI.h`.
 
 ## First boot
 
-Touch the target at the upper left, release, then touch the target at the lower
-right. The values are stored in NVS. Scanning begins after both touches succeed.
+Select Deutsch or English on the initial screen. Then touch the target at the
+upper left, release, and touch the target at the lower right. Language and
+calibration are stored in NVS. Scanning begins after both touches succeed.

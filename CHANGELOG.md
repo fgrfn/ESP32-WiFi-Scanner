@@ -8,6 +8,8 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- First-boot German/English selection before touch calibration.
+- Persistent language switching from display settings and the web dashboard.
 - English and German project documentation.
 - Reproducible Arduino CLI build workflow for ESP32 core 3.3.11.
 - Bug report, feature request, pull request, and release templates.
@@ -16,6 +18,8 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Replaced continuous/arbitrary brightness values with 25%, 50%, 75%, and 100%.
+- Localized the display UI and web dashboard in German and English.
 - Explicitly load the project-local TFT configuration before `TFT_eSPI.h`.
 - Preserve the ESP32 core 3.3.11-compatible `FS.h` include order.
 

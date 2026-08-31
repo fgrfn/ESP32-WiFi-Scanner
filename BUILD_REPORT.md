@@ -12,7 +12,7 @@ Build verified locally on 2026-08-31.
 | Arduino CLI | `1.5.1` |
 | TFT_eSPI | `2.5.43` |
 | XPT2046_Touchscreen | `1.4` (Library Manager release 1.4.0) |
-| Program storage | 1,064,132 / 1,310,720 bytes (81%) |
+| Program storage | 1,069,660 / 1,310,720 bytes (81%) |
 | Global/dynamic memory | 51,812 / 327,680 bytes (15%) |
 | Remaining local-variable memory | 275,868 bytes |
 | Compiler warnings | None with `--warnings all` |
@@ -37,6 +37,10 @@ reuse a globally configured library object.
 - Defined the existing touch CS GPIO 33 in the shared local setup.
 - Added explicit RSSI and channel casts to eliminate type/format warnings; no
   values or runtime decisions changed.
+- Added persistent German/English selection before first-run touch calibration,
+  later language switching in display settings, and matching dashboard localization.
+- Restricted brightness to the persistent 25%, 50%, 75%, and 100% levels on
+  both the display and dashboard; legacy values are normalized on load.
 - Preserved `FS.h`/`using fs::FS` before `TFT_eSPI` and `WebServer`.
 - Preserved controlled switching of the shared touch/SD SPI controller.
 
@@ -45,6 +49,9 @@ reuse a globally configured library object.
 - Flash and boot on the exact ESP32-2432S028R panel revision.
 - Confirm display colors, inversion, orientation, and backlight range.
 - Confirm first-run/manual touch calibration and mapping.
+- Confirm first-run language selection works before calibration and that later
+  display/dashboard language changes persist across restart.
+- Confirm the four brightness levels on the physical backlight.
 - Exercise scanning, mesh grouping, AP tracking, pause button, and RGB LED.
 - Test SD initialization, sustained CSV writes, and touch restoration.
 - Test dashboard, time sync, downloads, settings, and factory reset.

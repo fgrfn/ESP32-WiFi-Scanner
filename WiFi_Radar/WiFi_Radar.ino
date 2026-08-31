@@ -41,7 +41,7 @@ XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ);
 Preferences prefs;
 WebServer web(80);
 
-enum View { LIST, CHANNELS, SECURITY, DETAILS, MESH_APS, SETTINGS, CALIBRATION };
+enum View { LIST, CHANNELS, SECURITY, DETAILS, MESH_APS, SETTINGS, LANGUAGE, CALIBRATION };
 
 struct Net {
   String ssid;
@@ -72,12 +72,14 @@ bool paused = false;
 bool showHidden = true;
 bool groupSsids = true;
 bool lightTheme = false;
+bool english = false;
+bool languageSelected = false;
 bool sdLogging = false;
 bool sdMounted = false;
 bool webEnabled = false;
 bool webRunning = false;
 bool webRoutesReady = false;
-uint8_t brightness = 210;
+uint8_t brightness = 191;
 uint32_t scanMs = 5000;
 uint32_t nextScan = 0;
 uint32_t lastScanFinished = 0;
@@ -128,10 +130,38 @@ uint16_t bg() { return lightTheme ? TFT_WHITE : TFT_BLACK; }
 uint16_t fg() { return lightTheme ? TFT_BLACK : TFT_WHITE; }
 uint16_t panel() { return lightTheme ? 0xC618 : 0x1082; }
 uint16_t muted() { return lightTheme ? TFT_DARKGREY : TFT_LIGHTGREY; }
+const char *tr(const char *de, const char *en) { return english ? en : de; }
+
+int brightnessPercent() {
+  if (brightness < 96) return 25;
+  if (brightness < 160) return 50;
+  if (brightness < 224) return 75;
+  return 100;
+}
+
+uint8_t brightnessFromPercent(int percent) {
+  if (percent < 38) return 64;
+  if (percent < 63) return 128;
+  if (percent < 88) return 191;
+  return 255;
+}
 
 String authName(uint8_t a) {
   switch (a) {
-    case WIFI_AUTH_OPEN: return "OFFEN";
+    case WIFI_AUTH_OPEN: return tr("OFFEN", "OPEN");
+    case WIFI_AUTH_WEP: return "WEP";
+    case WIFI_AUTH_WPA_PSK: return "WPA";
+    case WIFI_AUTH_WPA2_PSK: return "WPA2";
+    case WIFI_AUTH_WPA_WPA2_PSK: return "WPA+";
+    case WIFI_AUTH_WPA2_ENTERPRISE: return "WPA2-E";
+    case WIFI_AUTH_WPA3_PSK: return "WPA3";
+    default: return tr("GES.", "SEC");
+  }
+}
+
+String authCode(uint8_t a) {
+  switch (a) {
+    case WIFI_AUTH_OPEN: return "OPEN";
     case WIFI_AUTH_WEP: return "WEP";
     case WIFI_AUTH_WPA_PSK: return "WPA";
     case WIFI_AUTH_WPA2_PSK: return "WPA2";
@@ -182,7 +212,7 @@ String vendorName(const String &bssid) {
     {"00:FC:8B", "Amazon"}, {"40:B4:CD", "Amazon"}, {"FC:65:DE", "Amazon"}
   };
   for (const Vendor &v : vendors) if (oui == v.oui) return v.name;
-  return "Unbekannt";
+  return tr("Unbekannt", "Unknown");
 }
 
 uint64_t currentEpoch() {
@@ -228,6 +258,8 @@ void saveSettings() {
   prefs.putBool("hidden", showHidden);
   prefs.putBool("groups", groupSsids);
   prefs.putBool("light", lightTheme);
+  prefs.putBool("english", english);
+  prefs.putBool("langSet", languageSelected);
   prefs.putBool("sd", sdLogging);
   prefs.putBool("web", webEnabled);
   prefs.putUChar("bright", brightness);
@@ -244,9 +276,11 @@ void loadSettings() {
   showHidden = prefs.getBool("hidden", true);
   groupSsids = prefs.getBool("groups", true);
   lightTheme = prefs.getBool("light", false);
+  english = prefs.getBool("english", false);
+  languageSelected = prefs.getBool("langSet", false);
   sdLogging = prefs.getBool("sd", false);
   webEnabled = prefs.getBool("web", false);
-  brightness = prefs.getUChar("bright", 210);
+  brightness = brightnessFromPercent((prefs.getUChar("bright", 191) * 100 + 127) / 255);
   touchLeft = prefs.getInt("tx0", 200);
   touchRight = prefs.getInt("tx1", 3700);
   touchTop = prefs.getInt("ty0", 240);
@@ -327,7 +361,8 @@ void standardFooter() {
   String p = "LIST";
   if (pages > 1) p += " " + String(page + 1) + "/" + String(pages);
   drawButton(0, p, view == LIST);
-  drawButton(80, view == CHANNELS ? "SICHER" : "KANAL", view == CHANNELS || view == SECURITY);
+  drawButton(80, view == CHANNELS ? tr("SICHER", "SECURITY") : tr("KANAL", "CHANNEL"),
+             view == CHANNELS || view == SECURITY);
   drawButton(160, paused ? "START" : "PAUSE", paused);
 }
 
@@ -403,10 +438,10 @@ void drawList() {
     tft.setTextDatum(MC_DATUM);
     tft.setTextFont(4);
     tft.setTextColor(TFT_YELLOW, bg());
-    tft.drawString(scanning ? "SCAN LAEUFT" : "KEINE NETZE", 120, 135);
+    tft.drawString(scanning ? tr("SCAN LAEUFT", "SCANNING") : tr("KEINE NETZE", "NO NETWORKS"), 120, 135);
     tft.setTextFont(2);
     tft.setTextColor(muted(), bg());
-    tft.drawString("Ergebnisse erscheinen automatisch", 120, 170);
+    tft.drawString(tr("Ergebnisse erscheinen automatisch", "Results appear automatically"), 120, 170);
     standardFooter();
     return;
   }
@@ -496,7 +531,7 @@ void drawChannels() {
   }
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(TFT_GREEN, bg());
-  tft.drawString("Empfehlung: Kanal " + String(recommended), 130, 276);
+  tft.drawString(String(tr("Empfehlung: Kanal ", "Recommended: channel ")) + String(recommended), 130, 276);
   standardFooter();
 }
 
@@ -539,7 +574,8 @@ void drawSecurity() {
   tft.setTextDatum(MC_DATUM);
   tft.setTextFont(2);
   tft.setTextColor(open ? TFT_RED : TFT_GREEN, bg());
-  tft.drawString(open ? String(open) + " offene Netze gefunden" : "Keine offenen Netze", 120, 270);
+  tft.drawString(open ? String(open) + tr(" offene Netze gefunden", " open networks found")
+                      : tr("Keine offenen Netze", "No open networks"), 120, 270);
   standardFooter();
 }
 
@@ -622,22 +658,23 @@ void drawDetails() {
   if (visible) {
     Net &n = nets[selected];
     tft.setTextColor(muted(), bg());
-    tft.drawString("Hersteller: " + vendorName(n.bssid), 8, 61);
+    tft.drawString(String(tr("Hersteller: ", "Vendor: ")) + vendorName(n.bssid), 8, 61);
     tft.drawString(n.bssid, 8, 81);
     tft.drawString("CH " + String(n.channel) + "  " + authName(n.auth) + "  " + String(selectedApCount()) + " AP", 8, 101);
     tft.setTextColor(strengthColor(n.rssi), bg());
     tft.drawString(String(n.rssi) + " dBm / " + String(quality(n.rssi)) + "%", 8, 121);
   } else {
     tft.setTextColor(TFT_RED, bg());
-    tft.drawString("Momentan nicht sichtbar", 8, 72);
+    tft.drawString(tr("Momentan nicht sichtbar", "Currently not visible"), 8, 72);
   }
   int average = statSamples ? statSum / statSamples : -100;
   tft.setTextColor(muted(), bg());
   tft.drawString("Min " + String(statMin) + "  Max " + String(statMax) + "  Avg " + String(average), 8, 143);
-  tft.drawString("Mess " + String(statSamples) + "  Aus " + String(outages) + "  CH-Wechsel " + String(channelChanges), 8, 163);
+  tft.drawString(String(tr("Mess ", "Samples ")) + String(statSamples) + tr("  Aus ", "  Out ") +
+                 String(outages) + tr("  CH-Wechsel ", "  CH changes ") + String(channelChanges), 8, 163);
   drawGraph();
-  drawButton(0, "ZURUECK");
-  drawButton(80, "AP-LISTE");
+  drawButton(0, tr("ZURUECK", "BACK"));
+  drawButton(80, tr("AP-LISTE", "AP LIST"));
   drawButton(160, "RESET");
 }
 
@@ -690,7 +727,7 @@ void drawMeshAps() {
     tft.setTextColor(nets[ni].auth == WIFI_AUTH_OPEN ? TFT_RED : TFT_YELLOW, rowBg);
     tft.drawString(authName(nets[ni].auth), 235, y + 23);
   }
-  drawButton(0, "ZURUECK");
+  drawButton(0, tr("ZURUECK", "BACK"));
   drawButton(80, pages > 1 ? String(meshPage + 1) + "/" + String(pages) : "APs " + String(count));
   drawButton(160, paused ? "START" : "PAUSE", paused);
 }
@@ -712,28 +749,48 @@ void drawSettings() {
   tft.fillRect(0, HEADER_H, W, FOOTER_Y - HEADER_H, bg());
   drawHeader();
   if (settingsPage == 0) {
-    settingRow(0, "Scanintervall", String(scanMs / 1000) + " s");
-    settingRow(1, "SSID-Gruppen", groupSsids ? "AN" : "AUS", groupSsids);
-    settingRow(2, "Hidden Netze", showHidden ? "AN" : "AUS", showHidden);
-    settingRow(3, "Helligkeit", String((brightness * 100) / 255) + "%");
-    settingRow(4, "Farbschema", lightTheme ? "HELL" : "DUNKEL", !lightTheme);
-    settingRow(5, "SD CSV-Log", sdLogging ? "AN" : "AUS", sdLogging && sdMounted);
-    settingRow(6, "Web-Dashboard", webEnabled ? "AN" : "AUS", webRunning);
-    settingRow(7, "Touch", "KALIBRIEREN");
+    settingRow(0, tr("Scanintervall", "Scan interval"), String(scanMs / 1000) + " s");
+    settingRow(1, tr("SSID-Gruppen", "SSID groups"), groupSsids ? tr("AN", "ON") : tr("AUS", "OFF"), groupSsids);
+    settingRow(2, tr("Hidden Netze", "Hidden networks"), showHidden ? tr("AN", "ON") : tr("AUS", "OFF"), showHidden);
+    settingRow(3, tr("Helligkeit", "Brightness"), String(brightnessPercent()) + "%");
+    settingRow(4, tr("Farbschema", "Color theme"), lightTheme ? tr("HELL", "LIGHT") : tr("DUNKEL", "DARK"), !lightTheme);
+    settingRow(5, "SD CSV-Log", sdLogging ? tr("AN", "ON") : tr("AUS", "OFF"), sdLogging && sdMounted);
+    settingRow(6, "Web-Dashboard", webEnabled ? tr("AN", "ON") : tr("AUS", "OFF"), webRunning);
+    settingRow(7, "Touch", tr("KALIBRIEREN", "CALIBRATE"));
   } else {
     uint32_t age = lastScanFinished ? (millis() - lastScanFinished) / 1000 : 0;
-    settingRow(0, "Uhrzeit", timeSynced ? timestampText().substring(11) : "Browser oeffnen", timeSynced);
-    settingRow(1, "Scan-Alter", String(age) + " s");
-    settingRow(2, "Verlauf", String(historyCount) + " Werte");
-    settingRow(3, "Kanalwechsel", String(channelChanges));
-    settingRow(4, "Hersteller-DB", "OFFLINE", true);
-    settingRow(5, "Werkseinstellungen", millis() < resetArmedUntil ? "NOCHMAL" : "RESET", millis() < resetArmedUntil);
-    settingRow(6, "Web-Adresse", webRunning ? "192.168.4.1" : "AUS", webRunning);
+    settingRow(0, tr("Uhrzeit", "Clock"), timeSynced ? timestampText().substring(11) : tr("Browser oeffnen", "Open browser"), timeSynced);
+    settingRow(1, tr("Scan-Alter", "Scan age"), String(age) + " s");
+    settingRow(2, tr("Verlauf", "History"), String(historyCount) + tr(" Werte", " values"));
+    settingRow(3, tr("Kanalwechsel", "Channel changes"), String(channelChanges));
+    settingRow(4, tr("Sprache", "Language"), english ? "ENGLISH" : "DEUTSCH", true);
+    settingRow(5, tr("Werkseinstellungen", "Factory settings"), millis() < resetArmedUntil ? tr("NOCHMAL", "AGAIN") : "RESET", millis() < resetArmedUntil);
+    settingRow(6, tr("Web-Adresse", "Web address"), webRunning ? "192.168.4.1" : tr("AUS", "OFF"), webRunning);
     settingRow(7, "Firmware", "V2.1");
   }
-  drawButton(0, "ZURUECK");
-  drawButton(80, settingsPage == 0 ? "MEHR 1/2" : "MEHR 2/2", true);
+  drawButton(0, tr("ZURUECK", "BACK"));
+  drawButton(80, settingsPage == 0 ? tr("MEHR 1/2", "MORE 1/2") : tr("MEHR 2/2", "MORE 2/2"), true);
   drawButton(160, paused ? "START" : "PAUSE", paused);
+}
+
+void drawLanguage() {
+  tft.fillScreen(bg());
+  tft.setTextDatum(MC_DATUM);
+  tft.setTextColor(fg(), bg());
+  tft.setTextFont(4);
+  tft.drawString("Sprache / Language", 120, 72);
+  tft.setTextFont(2);
+  tft.setTextColor(muted(), bg());
+  tft.drawString("Bitte waehlen / Please select", 120, 108);
+  tft.fillRoundRect(12, 142, 103, 92, 8, TFT_BLUE);
+  tft.fillRoundRect(125, 142, 103, 92, 8, TFT_DARKGREEN);
+  tft.setTextColor(TFT_WHITE);
+  tft.setTextFont(4);
+  tft.drawString("DE", 63, 177);
+  tft.drawString("EN", 176, 177);
+  tft.setTextFont(2);
+  tft.drawString("Deutsch", 63, 213);
+  tft.drawString("English", 176, 213);
 }
 
 void drawCalibration() {
@@ -741,9 +798,10 @@ void drawCalibration() {
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(fg(), bg());
   tft.setTextFont(4);
-  tft.drawString("Touch-Kalibrierung", 120, 130);
+  tft.drawString(tr("Touch-Kalibrierung", "Touch calibration"), 120, 130);
   tft.setTextFont(2);
-  tft.drawString(calibrationStep == 0 ? "Kreuz oben links beruehren" : "Kreuz unten rechts beruehren", 120, 165);
+  tft.drawString(calibrationStep == 0 ? tr("Kreuz oben links beruehren", "Touch the upper-left cross")
+                                      : tr("Kreuz unten rechts beruehren", "Touch the lower-right cross"), 120, 165);
   int x = calibrationStep == 0 ? 20 : 219;
   int y = calibrationStep == 0 ? 20 : 299;
   tft.drawCircle(x, y, 8, TFT_RED);
@@ -759,6 +817,7 @@ void render() {
     case DETAILS: drawDetails(); break;
     case MESH_APS: drawMeshAps(); break;
     case SETTINGS: drawSettings(); break;
+    case LANGUAGE: drawLanguage(); break;
     case CALIBRATION: drawCalibration(); break;
   }
 }
@@ -800,7 +859,7 @@ void logToSd() {
       ssid.replace(",", "_");
       file.printf("%s,%s,%s,%s,%u,%d,%d,%s\n", timestampText().c_str(), ssid.c_str(), nets[i].bssid.c_str(),
                   vendorName(nets[i].bssid).c_str(), nets[i].channel, static_cast<int>(nets[i].rssi),
-                  quality(nets[i].rssi), authName(nets[i].auth).c_str());
+                  quality(nets[i].rssi), authCode(nets[i].auth).c_str());
     }
     file.close();
   }
@@ -834,14 +893,15 @@ String networksJson() {
         ",\"settings\":{\"scan\":" + String(scanMs) + ",\"groups\":" + String(groupSsids ? "true" : "false") +
         ",\"hidden\":" + String(showHidden ? "true" : "false") + ",\"light\":" +
         String(lightTheme ? "true" : "false") + ",\"sd\":" + String(sdLogging ? "true" : "false") +
-        ",\"brightness\":" + String(brightness) + "},\"networks\":[";
+        ",\"brightness\":" + String(brightnessPercent()) + ",\"language\":\"" +
+        String(english ? "en" : "de") + "\"},\"networks\":[";
   for (int i = 0; i < netCount; ++i) {
     if (i) out += ',';
     out += "{\"ssid\":\"" + jsonEscape(nets[i].ssid.length() ? nets[i].ssid : "<Hidden>") + "\",";
     out += "\"bssid\":\"" + nets[i].bssid + "\",\"vendor\":\"" + vendorName(nets[i].bssid) +
            "\",\"channel\":" + String(nets[i].channel) + ',';
     out += "\"rssi\":" + String(nets[i].rssi) + ",\"quality\":" + String(quality(nets[i].rssi)) + ',';
-    out += "\"security\":\"" + authName(nets[i].auth) + "\"}";
+    out += "\"security\":\"" + authCode(nets[i].auth) + "\"}";
   }
   out += "]}";
   return out;
@@ -854,7 +914,7 @@ String currentCsv() {
     String ssid = nets[i].ssid; ssid.replace(",", "_");
     out += timestampText() + ',' + ssid + ',' + nets[i].bssid + ',' + vendorName(nets[i].bssid) + ',' +
            String(nets[i].channel) + ',' + String(nets[i].rssi) + ',' + String(quality(nets[i].rssi)) + ',' +
-           authName(nets[i].auth) + '\n';
+           authCode(nets[i].auth) + '\n';
   }
   return out;
 }
@@ -873,22 +933,25 @@ const char DASHBOARD[] PROGMEM = R"HTML(
 <!doctype html><html><head><meta name=viewport content="width=device-width,initial-scale=1">
 <title>WiFi Radar V2</title><style>
 body{font-family:system-ui;background:#0c1117;color:#e8eef5;margin:18px}.box{max-width:1000px;margin:auto}h1,h2{color:#48d597}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.card,table{background:#151d27;border:1px solid #33404d;border-radius:8px;padding:12px}table{width:100%;border-collapse:collapse;padding:0}th,td{padding:8px;border-bottom:1px solid #33404d;text-align:left}.bar{height:9px;background:#48d597}.channel{display:flex;gap:8px;align-items:center;margin:4px}.channel span{width:24px}.channel i{height:12px;background:#50b7ff;display:block}a{color:#50b7ff}.open{color:#ff5f62}button,select,input{padding:7px;margin:4px;background:#263442;color:#fff;border:1px solid #526477;border-radius:5px}small{color:#9cabb9}
-</style></head><body><div class=box><h1>WiFi Radar V2</h1><p id=summary>Lade Daten ...</p>
-<div class=grid><section class=card><h2>Kanaele</h2><div id=channels></div></section><section class=card><h2>Sicherheit</h2><div id=security></div></section>
-<section class=card><h2>Einstellungen</h2><label>Scan <select id=scan onchange=save()><option value=3000>3 s</option><option value=5000>5 s</option><option value=10000>10 s</option></select></label><br>
-<label><input type=checkbox id=groups onchange=save()>SSID gruppieren</label><br><label><input type=checkbox id=hidden onchange=save()>Hidden anzeigen</label><br>
-<label><input type=checkbox id=light onchange=save()>Helles Display</label><br><label><input type=checkbox id=sd onchange=save()>SD-Protokoll</label><br>
-<label>Helligkeit <input type=range min=40 max=255 id=bright onchange=save()></label><br><button onclick=fetch('/api/scan',{method:'POST'})>Jetzt scannen</button></section>
-<section class=card><h2>Export</h2><p><a href=/api/csv>Aktueller Scan (CSV)</a></p><p><a href=/api/history.csv>Signalverlauf (CSV)</a></p><button onclick="if(confirm('Alle Einstellungen und Kalibrierung loeschen?'))fetch('/api/factory-reset',{method:'POST'})">Werkseinstellungen</button></section></div>
-<h2>Netzwerke</h2><table><thead><tr><th>SSID / Hersteller</th><th>Kanal</th><th>Signal</th><th>Sicherheit</th></tr></thead><tbody id=rows></tbody></table></div>
+</style></head><body><div class=box><h1>WiFi Radar V2</h1><p id=summary></p>
+<div class=grid><section class=card><h2 id=channelsTitle></h2><div id=channels></div></section><section class=card><h2 id=securityTitle></h2><div id=security></div></section>
+<section class=card><h2 id=settingsTitle></h2><label><span id=scanLabel></span> <select id=scan onchange=save()><option value=3000>3 s</option><option value=5000>5 s</option><option value=10000>10 s</option></select></label><br>
+<label><input type=checkbox id=groups onchange=save()><span id=groupsLabel></span></label><br><label><input type=checkbox id=hidden onchange=save()><span id=hiddenLabel></span></label><br>
+<label><input type=checkbox id=light onchange=save()><span id=lightLabel></span></label><br><label><input type=checkbox id=sd onchange=save()><span id=sdLabel></span></label><br>
+<label><span id=brightnessLabel></span> <select id=bright onchange=save()><option value=25>25%</option><option value=50>50%</option><option value=75>75%</option><option value=100>100%</option></select></label><br>
+<label><span id=languageLabel></span> <select id=langSel onchange=save()><option value=de>Deutsch</option><option value=en>English</option></select></label><br><button id=scanNow onclick=fetch('/api/scan',{method:'POST'})></button></section>
+<section class=card><h2 id=exportTitle></h2><p><a id=currentCsvLink href=/api/csv></a></p><p><a id=historyCsvLink href=/api/history.csv></a></p><button id=resetButton onclick="if(confirm(T[lang].resetConfirm))fetch('/api/factory-reset',{method:'POST'})"></button></section></div>
+<h2 id=networksTitle></h2><table><thead><tr><th id=ssidHeading></th><th id=channelHeading></th><th id=signalHeading></th><th id=securityHeading></th></tr></thead><tbody id=rows></tbody></table></div>
 <script>
-let first=true;async function syncTime(){await fetch('/api/time?epoch='+Math.floor(Date.now()/1000)+'&offset='+new Date().getTimezoneOffset(),{method:'POST'})}
-async function save(){let q=new URLSearchParams({scan:scan.value,groups:groups.checked?1:0,hidden:hidden.checked?1:0,light:light.checked?1:0,sd:sd.checked?1:0,brightness:bright.value});await fetch('/api/settings?'+q,{method:'POST'});load()}
-async function load(){let d=await(await fetch('/api/networks')).json();summary.textContent=d.networks.length+' Netze - Empfehlung Kanal '+d.suggestedChannel+' - Scan vor '+d.scanAge+' s'+(d.timeSynced?'':' - Uhr nicht synchron');
+const T={de:{channels:'Kanaele',security:'Sicherheit',settings:'Einstellungen',scan:'Scan',groups:'SSID gruppieren',hidden:'Hidden anzeigen',light:'Helles Display',sd:'SD-Protokoll',brightness:'Helligkeit',language:'Sprache',scanNow:'Jetzt scannen',export:'Export',currentCsv:'Aktueller Scan (CSV)',historyCsv:'Signalverlauf (CSV)',factory:'Werkseinstellungen',networks:'Netzwerke',ssid:'SSID / Hersteller',channel:'Kanal',signal:'Signal',open:'OFFEN',recommend:'Empfehlung Kanal',age:'Scan vor',clock:'Uhr nicht synchron',resetConfirm:'Alle Einstellungen, Sprache und Kalibrierung loeschen?'},en:{channels:'Channels',security:'Security',settings:'Settings',scan:'Scan',groups:'Group SSIDs',hidden:'Show hidden networks',light:'Light display theme',sd:'SD logging',brightness:'Brightness',language:'Language',scanNow:'Scan now',export:'Export',currentCsv:'Current scan (CSV)',historyCsv:'Signal history (CSV)',factory:'Factory reset',networks:'Networks',ssid:'SSID / vendor',channel:'Channel',signal:'Signal',open:'OPEN',recommend:'Recommended channel',age:'Scan age',clock:'Clock not synchronized',resetConfirm:'Delete all settings, language and calibration?'}};
+let first=true,lang='de';function applyLanguage(value){lang=value;document.documentElement.lang=value;let t=T[lang];channelsTitle.textContent=t.channels;securityTitle.textContent=t.security;settingsTitle.textContent=t.settings;scanLabel.textContent=t.scan;groupsLabel.textContent=t.groups;hiddenLabel.textContent=t.hidden;lightLabel.textContent=t.light;sdLabel.textContent=t.sd;brightnessLabel.textContent=t.brightness;languageLabel.textContent=t.language;scanNow.textContent=t.scanNow;exportTitle.textContent=t.export;currentCsvLink.textContent=t.currentCsv;historyCsvLink.textContent=t.historyCsv;resetButton.textContent=t.factory;networksTitle.textContent=t.networks;ssidHeading.textContent=t.ssid;channelHeading.textContent=t.channel;signalHeading.textContent=t.signal;securityHeading.textContent=t.security;langSel.value=value}
+async function syncTime(){await fetch('/api/time?epoch='+Math.floor(Date.now()/1000)+'&offset='+new Date().getTimezoneOffset(),{method:'POST'})}
+async function save(){let q=new URLSearchParams({scan:scan.value,groups:groups.checked?1:0,hidden:hidden.checked?1:0,light:light.checked?1:0,sd:sd.checked?1:0,brightness:bright.value,language:langSel.value});await fetch('/api/settings?'+q,{method:'POST'});load()}
+async function load(){let d=await(await fetch('/api/networks')).json();applyLanguage(d.settings.language);let t=T[lang];summary.textContent=d.networks.length+' '+t.networks+' - '+t.recommend+' '+d.suggestedChannel+' - '+t.age+' '+d.scanAge+' s'+(d.timeSynced?'':' - '+t.clock);
 let cc=Array(14).fill(0);d.networks.forEach(n=>{if(n.channel>0&&n.channel<14)cc[n.channel]+=n.quality});let mx=Math.max(1,...cc);channels.innerHTML=cc.slice(1).map((v,i)=>`<div class=channel><span>${i+1}</span><i style="width:${Math.round(v/mx*190)}px"></i><b>${v}</b></div>`).join('');
-let sec={WPA3:0,WPA2:0,WPA:0,WEP:0,OFFEN:0};d.networks.forEach(n=>sec[n.security in sec?n.security:(n.security.startsWith('WPA2')?'WPA2':'WPA')]++);security.innerHTML=Object.entries(sec).map(x=>`<p class="${x[0]=='OFFEN'?'open':''}">${x[0]}: <b>${x[1]}</b></p>`).join('');
-rows.innerHTML=d.networks.map(n=>`<tr><td>${n.ssid}<small><br>${n.bssid} - ${n.vendor}</small></td><td>${n.channel}</td><td>${n.rssi} dBm<div class=bar style="width:${n.quality}%"></div></td><td class="${n.security==='OFFEN'?'open':''}">${n.security}</td></tr>`).join('');
-if(first){scan.value=d.settings.scan;groups.checked=d.settings.groups;hidden.checked=d.settings.hidden;light.checked=d.settings.light;sd.checked=d.settings.sd;bright.value=d.settings.brightness;first=false}}
+let sec={WPA3:0,WPA2:0,WPA:0,WEP:0,OPEN:0};d.networks.forEach(n=>sec[n.security in sec?n.security:(n.security.startsWith('WPA2')?'WPA2':'WPA')]++);security.innerHTML=Object.entries(sec).map(x=>`<p class="${x[0]=='OPEN'?'open':''}">${x[0]=='OPEN'?t.open:x[0]}: <b>${x[1]}</b></p>`).join('');
+rows.innerHTML=d.networks.map(n=>`<tr><td>${n.ssid}<small><br>${n.bssid} - ${n.vendor}</small></td><td>${n.channel}</td><td>${n.rssi} dBm<div class=bar style="width:${n.quality}%"></div></td><td class="${n.security==='OPEN'?'open':''}">${n.security==='OPEN'?t.open:n.security}</td></tr>`).join('');
+if(first){scan.value=d.settings.scan;groups.checked=d.settings.groups;hidden.checked=d.settings.hidden;light.checked=d.settings.light;sd.checked=d.settings.sd;first=false}bright.value=d.settings.brightness}
 syncTime().then(load);setInterval(load,3000)
 </script></body></html>)HTML";
 
@@ -919,8 +982,15 @@ void prepareWebRoutes() {
     if (web.hasArg("groups")) groupSsids = web.arg("groups") == "1";
     if (web.hasArg("hidden")) showHidden = web.arg("hidden") == "1";
     if (web.hasArg("light")) lightTheme = web.arg("light") == "1";
+    if (web.hasArg("language")) {
+      english = web.arg("language") == "en";
+      languageSelected = true;
+    }
     if (web.hasArg("sd")) { sdLogging = web.arg("sd") == "1"; if (sdLogging) ensureSd(); }
-    if (web.hasArg("brightness")) { brightness = constrain(web.arg("brightness").toInt(), 40, 255); applyBrightness(); }
+    if (web.hasArg("brightness")) {
+      brightness = brightnessFromPercent(web.arg("brightness").toInt());
+      applyBrightness();
+    }
     page = 0;
     saveSettings();
     render();
@@ -1032,6 +1102,11 @@ void openSettings() {
 void changeSetting(int row) {
   if (settingsPage == 1) {
     if (row == 2) saveMeasurementState();
+    if (row == 4) {
+      english = !english;
+      languageSelected = true;
+      saveSettings();
+    }
     if (row == 5) {
       if (millis() < resetArmedUntil) {
         saveMeasurementState();
@@ -1039,7 +1114,7 @@ void changeSetting(int row) {
         tft.fillScreen(TFT_BLACK);
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
         tft.setTextDatum(MC_DATUM);
-        tft.drawString("Neustart ...", 120, 160, 4);
+        tft.drawString(tr("Neustart ...", "Restarting ..."), 120, 160, 4);
         delay(500);
         ESP.restart();
       } else resetArmedUntil = millis() + 5000;
@@ -1052,7 +1127,9 @@ void changeSetting(int row) {
     case 1: groupSsids = !groupSsids; page = 0; break;
     case 2: showHidden = !showHidden; forceScan(); break;
     case 3:
-      brightness = brightness < 90 ? 140 : (brightness < 180 ? 220 : (brightness < 250 ? 65 : 140));
+      brightness = brightnessFromPercent(brightnessPercent() == 25 ? 50 :
+                                        brightnessPercent() == 50 ? 75 :
+                                        brightnessPercent() == 75 ? 100 : 25);
       applyBrightness();
       break;
     case 4: lightTheme = !lightTheme; break;
@@ -1176,7 +1253,32 @@ void handleCalibrationInput() {
   } else if (!pressed) fingerDown = false;
 }
 
+void handleLanguageInput() {
+  bool pressed = touch.touched();
+  if (pressed && !fingerDown && millis() - lastInput > 300) {
+    TS_Point p = touch.getPoint();
+    if (p.z > 150) {
+      lastInput = millis();
+      fingerDown = true;
+      english = p.x >= 2000;
+      languageSelected = true;
+      saveSettings();
+      if (touchCalibrated) {
+        view = LIST;
+        nextScan = millis();
+        render();
+      } else {
+        firstRunCalibration = true;
+        calibrationStep = 0;
+        view = CALIBRATION;
+        drawCalibration();
+      }
+    }
+  } else if (!pressed) fingerDown = false;
+}
+
 void handleInput() {
+  if (view == LANGUAGE) { handleLanguageInput(); return; }
   if (view == CALIBRATION) { handleCalibrationInput(); return; }
   int x = 0, y = 0;
   bool pressed = readMappedTouch(x, y);
@@ -1228,7 +1330,10 @@ void setup() {
 
   // A missing NVS marker means a fresh or erased preferences partition.
   // Calibrate before the first scan and remember the successful result.
-  if (!touchCalibrated) {
+  if (!languageSelected) {
+    view = LANGUAGE;
+    fingerDown = false;
+  } else if (!touchCalibrated) {
     firstRunCalibration = true;
     calibrationStep = 0;
     view = CALIBRATION;

@@ -7,12 +7,13 @@ lokalen Web-Dashboard an.
 
 ## Funktionen
 
-- automatische Touchkalibrierung beim ersten Start und manuelle Neukalibrierung
+- Sprachauswahl Deutsch/Englisch beim ersten Start, danach Touchkalibrierung
 - WLAN-Liste mit Seiten, Laufschrift und optionaler SSID-/Mesh-Gruppierung
 - BSSID-/AP-Vergleich, RSSI, Qualität, Kanal, Verschlüsselung und Offline-OUI
 - Signalverlauf mit Minimum, Maximum, Mittelwert, Ausfällen und Kanalwechseln
 - gewichtete Kanalanalyse mit Empfehlung für Kanal 1, 6 oder 11
-- Sicherheitsübersicht, NVS-Einstellungen, Helligkeit und helles/dunkles Schema
+- Sicherheitsübersicht, NVS-Einstellungen, umschaltbare Sprache,
+  Helligkeitsstufen 25/50/75/100 % und helles/dunkles Schema
 - RGB-Status-LED, SD-CSV-Protokolle und lokales Web-Dashboard
 - Browser-Zeitabgleich, CSV-Export und bestätigungspflichtiger Werksreset
 
@@ -22,7 +23,8 @@ lokalen Web-Dashboard an.
 2. `TFT_eSPI` `2.5.43` und `XPT2046_Touchscreen` `1.4` installieren.
 3. `WiFi_Radar/WiFi_Radar.ino` öffnen.
 4. **ESP32 Dev Module** auswählen, Port wählen, kompilieren und hochladen.
-5. Beim ersten Start die beiden Kalibrierkreuze berühren.
+5. Beim ersten Start Deutsch oder Englisch auswählen und danach die beiden
+   Kalibrierkreuze berühren.
 
 Die lokale Datei `tft_setup.h` wird über `build_opt.h` für Sketch und Bibliothek
 geladen. Die globale `TFT_eSPI`-Installation muss nicht geändert werden. Die Include-Reihenfolge mit
@@ -34,7 +36,7 @@ geladen. Die globale `TFT_eSPI`-Installation muss nicht geändert werden. Die In
 - **AP-LISTE**: BSSIDs derselben SSID vergleichen
 - **LIST** oder horizontale Wischgeste: Seite wechseln
 - **KANAL** / **SICHER**: Kanal- und Sicherheitsanalyse
-- **SET**: Einstellungen, Kalibrierung und Werksreset
+- **SET**: Sprache, Helligkeit, weitere Einstellungen, Kalibrierung und Werksreset
 - BOOT-Taster / **PAUSE**: Scan anhalten oder fortsetzen
 
 ## Web-Dashboard

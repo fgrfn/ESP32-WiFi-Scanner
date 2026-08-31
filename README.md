@@ -11,7 +11,7 @@ logs CSV data to an optional SD card, and serves a local browser dashboard.
 
 ## Highlights
 
-- Automatic first-boot and manual touch calibration
+- First-boot German/English language selection followed by automatic touch calibration
 - Paged network list with scrolling SSIDs
 - Optional grouping of identical SSIDs and mesh access points
 - BSSID/AP comparison with offline vendor identification
@@ -19,7 +19,7 @@ logs CSV data to an optional SD card, and serves a local browser dashboard.
 - Signal history with minimum, maximum, average, outages, and channel changes
 - Weighted channel analysis with recommendations for channels 1, 6, and 11
 - Security overview and open-network warning
-- Persistent NVS settings, brightness, and light/dark themes
+- Persistent NVS settings, changeable language, four brightness levels, and light/dark themes
 - RGB status LED and optional SD CSV logging
 - Local responsive dashboard with charts, settings, and CSV export
 - Browser-based time synchronization for real timestamps
@@ -44,7 +44,8 @@ for the complete pin map and shared-bus warning.
 3. Open `WiFi_Radar/WiFi_Radar.ino`.
 4. Select **ESP32 Dev Module** (`esp32:esp32:esp32`).
 5. Connect the CYD, select its port, then verify and upload.
-6. On first boot, touch the upper-left and lower-right calibration targets.
+6. On first boot, select Deutsch or English, then touch the upper-left and
+   lower-right calibration targets.
 
 The display setup is project-local. `build_opt.h` preloads it for the sketch and
 the separately compiled `TFT_eSPI` source; do not edit the installed library.
@@ -57,7 +58,7 @@ Full instructions are in
 - Tap **AP-LISTE** to compare BSSIDs advertising the selected SSID.
 - Tap **LIST** repeatedly or swipe horizontally to change result pages.
 - Tap **KANAL**, then **SICHER**, for channel and security views.
-- Tap **SET** for scan, display, SD, web, calibration, and reset settings.
+- Tap **SET** for scan, language, display, SD, web, calibration, and reset settings.
 - Press the BOOT button or tap **PAUSE** to pause/resume scanning.
 
 See the [complete UI guide](docs/display-ui.md).

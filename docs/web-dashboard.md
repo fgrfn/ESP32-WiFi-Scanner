@@ -7,9 +7,10 @@ Enable **SET > Web-Dashboard**, connect to `WiFi-Radar-V2` with password
 point and does not route internet traffic.
 
 The page displays the network table, per-channel load, security distribution,
-scan age, and recommendation. It can change scan interval, SSID grouping,
-hidden-network display, theme, SD logging, and brightness; start a scan; export
-CSVs; or request a factory reset.
+scan age, and recommendation. It follows the saved German/English selection and
+can change language, scan interval, SSID grouping, hidden-network display,
+theme, SD logging, and brightness (25/50/75/100%); start a scan; export CSVs; or
+request a factory reset.
 
 ## Time synchronization
 
