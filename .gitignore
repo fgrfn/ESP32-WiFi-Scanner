@@ -1,0 +1,23 @@
+# Arduino build output
+build/
+*.bin
+*.elf
+*.hex
+*.map
+*.partitions.bin
+*.bootloader.bin
+
+# Arduino IDE and editor state
+.arduinoIDE/
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local tooling
+.arduino-cli/
+compile-report.txt

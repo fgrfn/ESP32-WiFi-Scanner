@@ -1,0 +1,44 @@
+name: Bug report
+description: Report reproducible firmware or hardware behavior
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Include expected and actual behavior.
+    validations:
+      required: true
+  - type: input
+    id: board
+    attributes:
+      label: Board and revision
+      placeholder: ESP32-2432S028R, PCB revision if known
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Toolchain versions
+      placeholder: ESP32 core 3.3.11, TFT_eSPI 2.5.43, XPT2046 1.4
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Build or serial output
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed private SSIDs, BSSIDs, IP addresses, and credentials.
+          required: true
