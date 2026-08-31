@@ -1,4 +1,7 @@
-# Images
+# Image assets
 
-No image assets were present in the supplied archive. Add release screenshots
-here only after redacting SSIDs, BSSIDs, IP addresses, and other private data.
+- `logo.png` — transparent ESP32 WiFi Scanner repository logo generated for
+  this project with OpenAI ImageGen.
+
+Add future release screenshots here only after redacting SSIDs, BSSIDs, IP
+addresses, and other private data.

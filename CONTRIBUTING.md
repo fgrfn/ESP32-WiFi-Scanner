@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve WiFi Radar.
+Thanks for helping improve ESP32 WiFi Scanner.
 
 ## Development setup
 
@@ -9,7 +9,7 @@ Thanks for helping improve WiFi Radar.
 3. Compile with:
 
    ```sh
-   arduino-cli compile --fqbn esp32:esp32:esp32 WiFi_Radar
+   arduino-cli compile --fqbn esp32:esp32:esp32 ESP32_WiFi_Scanner
    ```
 
 Do not move `FS.h` below `TFT_eSPI.h` or `WebServer.h`. Do not replace the

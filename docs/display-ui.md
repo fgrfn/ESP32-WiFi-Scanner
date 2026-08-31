@@ -5,7 +5,7 @@
 With fresh or erased NVS, the device first shows two large buttons for Deutsch
 and English. The selected language is saved immediately, then the two-point
 touch calibration begins. A factory reset repeats this sequence. Language can
-later be changed under **SET > MORE 2/2 > Language/Sprache** without resetting
+later be changed under **SET > MORE 2/2 > Language** without resetting
 calibration or scan history.
 
 ## Network list

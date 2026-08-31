@@ -29,4 +29,4 @@ jobs:
           arduino-cli lib install XPT2046_Touchscreen@1.4
 
       - name: Compile
-        run: arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all WiFi_Radar
+        run: arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all ESP32_WiFi_Scanner

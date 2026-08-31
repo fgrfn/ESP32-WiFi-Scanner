@@ -2,8 +2,8 @@
 
 ## Access
 
-Enable **SET > Web-Dashboard**, connect to `WiFi-Radar-V2` with password
-`radar1234`, and open `http://192.168.4.1`. The ESP32 runs an isolated access
+Enable **SET > Web Dashboard**, connect to `ESP32-WiFi-Scanner` with password
+`scanner1234`, and open `http://192.168.4.1`. The ESP32 runs an isolated access
 point and does not route internet traffic.
 
 The page displays the network table, per-channel load, security distribution,

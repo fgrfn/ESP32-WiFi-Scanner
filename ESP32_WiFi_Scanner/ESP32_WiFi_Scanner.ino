@@ -337,7 +337,7 @@ void drawHeader() {
   tft.setTextFont(2);
   tft.setTextDatum(ML_DATUM);
   tft.setTextColor(fg(), panel());
-  tft.drawString("WiFi Radar V2", 5, 12);
+  tft.drawString("ESP32 WiFi Scan", 5, 12);
   uint16_t status = paused ? TFT_RED : (scanning ? TFT_YELLOW : TFT_GREEN);
   tft.fillCircle(151, 12, 5, status);
   tft.setTextDatum(MR_DATUM);
@@ -837,8 +837,8 @@ void switchToTouchBus() {
 bool ensureSd() {
   switchToSdBus();
   if (!sdMounted) sdMounted = SD.begin(SD_CS, auxSPI, 10000000);
-  if (sdMounted && !SD.exists("/wifi-radar.csv")) {
-    File file = SD.open("/wifi-radar.csv", FILE_WRITE);
+  if (sdMounted && !SD.exists("/wifi-scanner.csv")) {
+    File file = SD.open("/wifi-scanner.csv", FILE_WRITE);
     if (file) { file.println("timestamp,ssid,bssid,vendor,channel,rssi,quality,security"); file.close(); }
   }
   if (sdMounted && !SD.exists("/wifi-history.csv")) {
@@ -852,7 +852,7 @@ bool ensureSd() {
 void logToSd() {
   if (!sdLogging || !ensureSd()) return;
   switchToSdBus();
-  File file = SD.open("/wifi-radar.csv", FILE_APPEND);
+  File file = SD.open("/wifi-scanner.csv", FILE_APPEND);
   if (file) {
     for (int i = 0; i < netCount; ++i) {
       String ssid = nets[i].ssid;
@@ -931,9 +931,9 @@ String historyCsv() {
 
 const char DASHBOARD[] PROGMEM = R"HTML(
 <!doctype html><html><head><meta name=viewport content="width=device-width,initial-scale=1">
-<title>WiFi Radar V2</title><style>
+<title>ESP32 WiFi Scanner</title><style>
 body{font-family:system-ui;background:#0c1117;color:#e8eef5;margin:18px}.box{max-width:1000px;margin:auto}h1,h2{color:#48d597}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.card,table{background:#151d27;border:1px solid #33404d;border-radius:8px;padding:12px}table{width:100%;border-collapse:collapse;padding:0}th,td{padding:8px;border-bottom:1px solid #33404d;text-align:left}.bar{height:9px;background:#48d597}.channel{display:flex;gap:8px;align-items:center;margin:4px}.channel span{width:24px}.channel i{height:12px;background:#50b7ff;display:block}a{color:#50b7ff}.open{color:#ff5f62}button,select,input{padding:7px;margin:4px;background:#263442;color:#fff;border:1px solid #526477;border-radius:5px}small{color:#9cabb9}
-</style></head><body><div class=box><h1>WiFi Radar V2</h1><p id=summary></p>
+</style></head><body><div class=box><h1>ESP32 WiFi Scanner</h1><p id=summary></p>
 <div class=grid><section class=card><h2 id=channelsTitle></h2><div id=channels></div></section><section class=card><h2 id=securityTitle></h2><div id=security></div></section>
 <section class=card><h2 id=settingsTitle></h2><label><span id=scanLabel></span> <select id=scan onchange=save()><option value=3000>3 s</option><option value=5000>5 s</option><option value=10000>10 s</option></select></label><br>
 <label><input type=checkbox id=groups onchange=save()><span id=groupsLabel></span></label><br><label><input type=checkbox id=hidden onchange=save()><span id=hiddenLabel></span></label><br>
@@ -960,7 +960,7 @@ void prepareWebRoutes() {
   web.on("/", []() { web.send_P(200, "text/html", DASHBOARD); });
   web.on("/api/networks", []() { web.send(200, "application/json", networksJson()); });
   web.on("/api/csv", []() {
-    web.sendHeader("Content-Disposition", "attachment; filename=wifi-radar.csv");
+    web.sendHeader("Content-Disposition", "attachment; filename=esp32-wifi-scanner.csv");
     web.send(200, "text/csv", currentCsv());
   });
   web.on("/api/history.csv", []() {
@@ -1014,7 +1014,7 @@ void applyWebSetting() {
   if (webEnabled && !webRunning) {
     WiFi.mode(WIFI_AP_STA);
     prepareWebRoutes();
-    webRunning = WiFi.softAP("WiFi-Radar-V2", "radar1234");
+    webRunning = WiFi.softAP("ESP32-WiFi-Scanner", "scanner1234");
     if (webRunning) web.begin();
   } else if (!webEnabled && webRunning) {
     web.stop();
@@ -1307,6 +1307,7 @@ void handleInput() {
 
 void setup() {
   Serial.begin(115200);
+  // Keep the legacy namespace so existing installations retain their settings.
   prefs.begin("wifi-radar", false);
   loadSettings();
   loadMeasurementState();

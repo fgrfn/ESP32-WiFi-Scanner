@@ -16,7 +16,7 @@ ESP32 core.
 1. Add Espressif's board manager URL in Arduino IDE preferences if necessary.
 2. Open Boards Manager, install **esp32 by Espressif Systems** version `3.3.11`.
 3. Open Library Manager and install the two pinned libraries above.
-4. Open `WiFi_Radar/WiFi_Radar.ino`.
+4. Open `ESP32_WiFi_Scanner/ESP32_WiFi_Scanner.ino`.
 5. Select **ESP32 Dev Module**. The equivalent FQBN is
    `esp32:esp32:esp32`.
 6. Select the serial port.
@@ -32,7 +32,7 @@ arduino-cli core update-index
 arduino-cli core install esp32:esp32@3.3.11
 arduino-cli lib install TFT_eSPI@2.5.43
 arduino-cli lib install XPT2046_Touchscreen@1.4
-arduino-cli compile --fqbn esp32:esp32:esp32 WiFi_Radar
+arduino-cli compile --fqbn esp32:esp32:esp32 ESP32_WiFi_Scanner
 ```
 
 ## Critical include order

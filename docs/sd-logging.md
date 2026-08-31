@@ -2,7 +2,7 @@
 
 Enable **SET > SD CSV-Log** with a compatible FAT-formatted card inserted.
 
-## `/wifi-radar.csv`
+## `/wifi-scanner.csv`
 
 One row per detected BSSID after every completed scan:
 

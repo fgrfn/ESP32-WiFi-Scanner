@@ -1,6 +1,6 @@
 # Attribution and project origin
 
-WiFi Radar was inspired by and initially based on the Arduino code distributed
+ESP32 WiFi Scanner was inspired by and initially based on the Arduino code distributed
 with Marco's MakerWorld project:
 
 - **WIFI ANALIZER - ESP32 LVGL 2432S028 2.8\"**

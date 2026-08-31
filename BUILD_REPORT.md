@@ -20,7 +20,7 @@ Build verified locally on 2026-08-31.
 Command shape:
 
 ```sh
-arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all WiFi_Radar
+arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all ESP32_WiFi_Scanner
 ```
 
 The clean verification used a new build directory, so `TFT_eSPI.cpp` was
@@ -29,8 +29,8 @@ reuse a globally configured library object.
 
 ## Source changes from the supplied V2.1 archive
 
-- Renamed the Arduino sketch/folder pair to `WiFi_Radar/WiFi_Radar.ino` for a
-  clean repository layout; behavior remains V2.1.
+- Renamed the Arduino sketch/folder pair to
+  `ESP32_WiFi_Scanner/ESP32_WiFi_Scanner.ino` for the final project branding.
 - Added an explicit `#include "tft_setup.h"` before `TFT_eSPI.h`.
 - Added `build_opt.h` to preload the local TFT setup for separately compiled
   library sources.

@@ -8,6 +8,7 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- New ESP32 WiFi Scanner branding and transparent repository logo.
 - First-boot German/English selection before touch calibration.
 - Persistent language switching from display settings and the web dashboard.
 - English and German project documentation.
@@ -18,6 +19,9 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Renamed the sketch, dashboard, access point, scan CSV, and documentation from
+  WiFi Radar to ESP32 WiFi Scanner.
+- Consolidated repository-facing documentation in English.
 - Replaced continuous/arbitrary brightness values with 25%, 50%, 75%, and 100%.
 - Localized the display UI and web dashboard in German and English.
 - Explicitly load the project-local TFT configuration before `TFT_eSPI.h`.
