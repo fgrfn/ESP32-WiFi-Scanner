@@ -1,6 +1,9 @@
 # License options
 
-The owner must choose a license before publication.
+The owner must choose a license before publication. In addition, because the
+firmware started from Arduino code distributed with a MakerWorld project, the
+license of that original source—or explicit permission from its creator—must be
+confirmed first. See [`ATTRIBUTION.md`](../ATTRIBUTION.md).
 
 | License | Practical effect |
 |---|---|

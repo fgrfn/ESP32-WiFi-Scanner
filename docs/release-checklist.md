@@ -6,6 +6,9 @@
 - [ ] Confirm GitHub user or organization.
 - [ ] Confirm public or private visibility.
 - [ ] Select a license and replace `LICENSE-PENDING.md` with `LICENSE`.
+- [ ] Verify the original Arduino code license or obtain written publication
+  permission from Marco, including the intended outbound license.
+- [ ] Keep the MakerWorld attribution and enclosure link.
 
 ## Quality
 

@@ -11,6 +11,8 @@ project intends to use [Semantic Versioning](https://semver.org/).
 - English and German project documentation.
 - Reproducible Arduino CLI build workflow for ESP32 core 3.3.11.
 - Bug report, feature request, pull request, and release templates.
+- Project-origin attribution and a link to Marco's original MakerWorld project
+  and matching enclosure.
 
 ### Changed
 

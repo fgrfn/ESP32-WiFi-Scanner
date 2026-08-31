@@ -52,5 +52,16 @@ unterschiedlichen Pins; die kontrollierte Busumschaltung im Sketch muss erhalten
 bleiben.
 
 Ausführliche Informationen stehen in der [englischen README](README.md) und im
-Ordner [`docs`](docs/). Die Lizenz ist vor einer Veröffentlichung noch durch den
-Projektinhaber auszuwählen.
+Ordner [`docs`](docs/).
+
+## Ursprung und Danksagung
+
+Grundidee und anfängliche Codebasis stammen aus Marcos MakerWorld-Projekt
+[WIFI ANALIZER - ESP32 LVGL 2432S028 2.8\"](https://makerworld.com/de/models/2303837-wifi-analizer-esp32-lvgl-2432s028-2-8#profileId-2514600).
+Die Firmware wurde anschließend erheblich erweitert. Dort wird auch ein
+passendes druckbares Gehäuse angeboten; dessen Dateien werden in diesem
+Repository nicht weitergegeben. Details stehen in [ATTRIBUTION.md](ATTRIBUTION.md).
+
+Vor einer Veröffentlichung muss neben der eigenen Lizenzwahl geklärt werden,
+unter welchen Bedingungen der ursprüngliche Arduino-Code weitergegeben werden
+darf oder ob Marco eine ausdrückliche Freigabe erteilt.

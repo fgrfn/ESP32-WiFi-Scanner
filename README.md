@@ -132,4 +132,15 @@ is in `.github/workflows/compile.yml`.
 
 License selection is intentionally pending. No GitHub publication should occur
 until the owner confirms the final repository name, owner/organization,
-visibility, and license. See [license options](docs/licensing.md).
+visibility, and license. Because this firmware began from code supplied with a
+MakerWorld project, the original code's redistribution terms or the creator's
+permission must also be confirmed. See [Attribution](ATTRIBUTION.md) and
+[license options](docs/licensing.md).
+
+## Acknowledgements
+
+The original idea and initial code basis came from Marco's
+[WIFI ANALIZER - ESP32 LVGL 2432S028 2.8\"](https://makerworld.com/de/models/2303837-wifi-analizer-esp32-lvgl-2432s028-2-8#profileId-2514600).
+That project also offers a matching printable enclosure. This repository does
+not redistribute the enclosure files; obtain them from the original page and
+observe its license. The full provenance note is in [ATTRIBUTION.md](ATTRIBUTION.md).
