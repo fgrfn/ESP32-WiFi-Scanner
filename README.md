@@ -7,7 +7,7 @@
 
   ![ESP32 Core](https://img.shields.io/badge/ESP32_Core-3.3.11-E7352C)
   ![Hardware](https://img.shields.io/badge/Hardware-ESP32--2432S028R-1F6FEB)
-  ![Build](https://img.shields.io/badge/Build-passing-2EA043)
+  [![Compile Arduino sketch](https://github.com/fgrfn/ESP32-WiFi-Scanner/actions/workflows/compile.yml/badge.svg)](https://github.com/fgrfn/ESP32-WiFi-Scanner/actions/workflows/compile.yml)
   ![License](https://img.shields.io/badge/License-pending-yellow)
 </div>
 

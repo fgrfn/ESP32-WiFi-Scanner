@@ -1,6 +1,6 @@
 # Verified build report
 
-Build verified locally on 2026-08-31.
+Build verified by GitHub Actions on 2026-09-01.
 
 ## Result
 
@@ -12,7 +12,7 @@ Build verified locally on 2026-08-31.
 | Arduino CLI | `1.5.1` |
 | TFT_eSPI | `2.5.43` |
 | XPT2046_Touchscreen | `1.4` (Library Manager release 1.4.0) |
-| Program storage | 1,069,660 / 1,310,720 bytes (81%) |
+| Program storage | 1,069,580 / 1,310,720 bytes (81%) |
 | Global/dynamic memory | 51,812 / 327,680 bytes (15%) |
 | Remaining local-variable memory | 275,868 bytes |
 | Compiler warnings | None with `--warnings all` |
@@ -23,8 +23,8 @@ Command shape:
 arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all ESP32_WiFi_Scanner
 ```
 
-The clean verification used a new build directory, so `TFT_eSPI.cpp` was
-recompiled with the project-local `build_opt.h` and `tft_setup.h`; it did not
+The verification ran in a clean GitHub-hosted environment, so `TFT_eSPI.cpp`
+was compiled with the project-local `build_opt.h` and `tft_setup.h`; it did not
 reuse a globally configured library object.
 
 ## Source changes from the supplied V2.1 archive
