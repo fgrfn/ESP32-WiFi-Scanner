@@ -6,6 +6,8 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-09-01
+
 ### Added
 
 - New ESP32 WiFi Scanner branding and transparent repository logo.

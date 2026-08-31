@@ -766,7 +766,7 @@ void drawSettings() {
     settingRow(4, tr("Sprache", "Language"), english ? "ENGLISH" : "DEUTSCH", true);
     settingRow(5, tr("Werkseinstellungen", "Factory settings"), millis() < resetArmedUntil ? tr("NOCHMAL", "AGAIN") : "RESET", millis() < resetArmedUntil);
     settingRow(6, tr("Web-Adresse", "Web address"), webRunning ? "192.168.4.1" : tr("AUS", "OFF"), webRunning);
-    settingRow(7, "Firmware", "V2.1");
+    settingRow(7, "Firmware", "V2.2");
   }
   drawButton(0, tr("ZURUECK", "BACK"));
   drawButton(80, settingsPage == 0 ? tr("MEHR 1/2", "MORE 1/2") : tr("MEHR 2/2", "MORE 2/2"), true);
