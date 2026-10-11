@@ -878,10 +878,29 @@ void logToSd() {
   switchToTouchBus();
 }
 
-String jsonEscape(String s) {
-  s.replace("\\", "\\\\");
-  s.replace("\"", "\\\"");
-  return s;
+String jsonEscape(const String &value) {
+  static const char hex[] = "0123456789ABCDEF";
+  String escaped;
+  escaped.reserve(value.length() + 8);
+  for (size_t i = 0; i < value.length(); ++i) {
+    uint8_t c = static_cast<uint8_t>(value[i]);
+    switch (c) {
+      case '\\': escaped += "\\\\"; break;
+      case '"': escaped += "\\\""; break;
+      case '\b': escaped += "\\b"; break;
+      case '\f': escaped += "\\f"; break;
+      case '\n': escaped += "\\n"; break;
+      case '\r': escaped += "\\r"; break;
+      case '\t': escaped += "\\t"; break;
+      default:
+        if (c < 0x20) {
+          escaped += "\\u00";
+          escaped += hex[c >> 4];
+          escaped += hex[c & 0x0F];
+        } else escaped += static_cast<char>(c);
+    }
+  }
+  return escaped;
 }
 
 String networksJson() {
@@ -944,13 +963,14 @@ body{font-family:system-ui;background:#0c1117;color:#e8eef5;margin:18px}.box{max
 <h2 id=networksTitle></h2><table><thead><tr><th id=ssidHeading></th><th id=channelHeading></th><th id=signalHeading></th><th id=securityHeading></th></tr></thead><tbody id=rows></tbody></table></div>
 <script>
 const T={de:{channels:'Kanaele',security:'Sicherheit',settings:'Einstellungen',scan:'Scan',groups:'SSID gruppieren',hidden:'Hidden anzeigen',light:'Helles Display',sd:'SD-Protokoll',brightness:'Helligkeit',language:'Sprache',scanNow:'Jetzt scannen',export:'Export',currentCsv:'Aktueller Scan (CSV)',historyCsv:'Signalverlauf (CSV)',factory:'Werkseinstellungen',networks:'Netzwerke',ssid:'SSID / Hersteller',channel:'Kanal',signal:'Signal',open:'OFFEN',recommend:'Empfehlung Kanal',age:'Scan vor',clock:'Uhr nicht synchron',resetConfirm:'Alle Einstellungen, Sprache und Kalibrierung loeschen?'},en:{channels:'Channels',security:'Security',settings:'Settings',scan:'Scan',groups:'Group SSIDs',hidden:'Show hidden networks',light:'Light display theme',sd:'SD logging',brightness:'Brightness',language:'Language',scanNow:'Scan now',export:'Export',currentCsv:'Current scan (CSV)',historyCsv:'Signal history (CSV)',factory:'Factory reset',networks:'Networks',ssid:'SSID / vendor',channel:'Channel',signal:'Signal',open:'OPEN',recommend:'Recommended channel',age:'Scan age',clock:'Clock not synchronized',resetConfirm:'Delete all settings, language and calibration?'}};
+const esc=value=>String(value).replace(/[&<>]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[char]));
 let first=true,lang='de';function applyLanguage(value){lang=value;document.documentElement.lang=value;let t=T[lang];channelsTitle.textContent=t.channels;securityTitle.textContent=t.security;settingsTitle.textContent=t.settings;scanLabel.textContent=t.scan;groupsLabel.textContent=t.groups;hiddenLabel.textContent=t.hidden;lightLabel.textContent=t.light;sdLabel.textContent=t.sd;brightnessLabel.textContent=t.brightness;languageLabel.textContent=t.language;scanNow.textContent=t.scanNow;exportTitle.textContent=t.export;currentCsvLink.textContent=t.currentCsv;historyCsvLink.textContent=t.historyCsv;resetButton.textContent=t.factory;networksTitle.textContent=t.networks;ssidHeading.textContent=t.ssid;channelHeading.textContent=t.channel;signalHeading.textContent=t.signal;securityHeading.textContent=t.security;langSel.value=value}
 async function syncTime(){await fetch('/api/time?epoch='+Math.floor(Date.now()/1000)+'&offset='+new Date().getTimezoneOffset(),{method:'POST'})}
 async function save(){let q=new URLSearchParams({scan:scan.value,groups:groups.checked?1:0,hidden:hidden.checked?1:0,light:light.checked?1:0,sd:sd.checked?1:0,brightness:bright.value,language:langSel.value});await fetch('/api/settings?'+q,{method:'POST'});load()}
 async function load(){let d=await(await fetch('/api/networks')).json();applyLanguage(d.settings.language);let t=T[lang];summary.textContent=d.networks.length+' '+t.networks+' - '+t.recommend+' '+d.suggestedChannel+' - '+t.age+' '+d.scanAge+' s'+(d.timeSynced?'':' - '+t.clock);
 let cc=Array(14).fill(0);d.networks.forEach(n=>{if(n.channel>0&&n.channel<14)cc[n.channel]+=n.quality});let mx=Math.max(1,...cc);channels.innerHTML=cc.slice(1).map((v,i)=>`<div class=channel><span>${i+1}</span><i style="width:${Math.round(v/mx*190)}px"></i><b>${v}</b></div>`).join('');
 let sec={WPA3:0,WPA2:0,WPA:0,WEP:0,OPEN:0};d.networks.forEach(n=>sec[n.security in sec?n.security:(n.security.startsWith('WPA2')?'WPA2':'WPA')]++);security.innerHTML=Object.entries(sec).map(x=>`<p class="${x[0]=='OPEN'?'open':''}">${x[0]=='OPEN'?t.open:x[0]}: <b>${x[1]}</b></p>`).join('');
-rows.innerHTML=d.networks.map(n=>`<tr><td>${n.ssid}<small><br>${n.bssid} - ${n.vendor}</small></td><td>${n.channel}</td><td>${n.rssi} dBm<div class=bar style="width:${n.quality}%"></div></td><td class="${n.security==='OPEN'?'open':''}">${n.security==='OPEN'?t.open:n.security}</td></tr>`).join('');
+rows.innerHTML=d.networks.map(n=>`<tr><td>${esc(n.ssid)}<small><br>${esc(n.bssid)} - ${esc(n.vendor)}</small></td><td>${n.channel}</td><td>${n.rssi} dBm<div class=bar style="width:${n.quality}%"></div></td><td class="${n.security==='OPEN'?'open':''}">${n.security==='OPEN'?t.open:esc(n.security)}</td></tr>`).join('');
 if(first){scan.value=d.settings.scan;groups.checked=d.settings.groups;hidden.checked=d.settings.hidden;light.checked=d.settings.light;sd.checked=d.settings.sd;first=false}bright.value=d.settings.brightness}
 syncTime().then(load);setInterval(load,3000)
 </script></body></html>)HTML";
