@@ -18,8 +18,10 @@ One row per completed scan while a BSSID is selected:
 timestamp,ssid,bssid,channel,rssi,visible,channel_changes,outages
 ```
 
-Commas in SSIDs are replaced with underscores. Before browser time sync,
-timestamps use `U+seconds`; afterward they use local `YYYY-MM-DDTHH:MM:SS`.
+SSID fields are quoted according to CSV rules, and embedded quotes are doubled.
+Values beginning with a spreadsheet formula marker (`=`, `+`, `-`, or `@`) or
+leading tab/newline are prefixed with an apostrophe. Before browser time sync, timestamps use
+`U+seconds`; afterward they use local `YYYY-MM-DDTHH:MM:SS`.
 
 The web history export has a separate sample-oriented format:
 

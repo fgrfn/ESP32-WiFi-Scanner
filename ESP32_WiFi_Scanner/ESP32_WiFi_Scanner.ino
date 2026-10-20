@@ -849,14 +849,26 @@ bool ensureSd() {
   return sdMounted;
 }
 
+String csvCell(const String &value) {
+  String escaped = value;
+  escaped.replace("\"", "\"\"");
+  if (escaped.length()) {
+    char first = escaped.charAt(0);
+    if (first == '=' || first == '+' || first == '-' || first == '@' ||
+        first == '\t' || first == '\r' || first == '\n') {
+      escaped = String("'") + escaped;
+    }
+  }
+  return String("\"") + escaped + "\"";
+}
+
 void logToSd() {
   if (!sdLogging || !ensureSd()) return;
   switchToSdBus();
   File file = SD.open("/wifi-scanner.csv", FILE_APPEND);
   if (file) {
     for (int i = 0; i < netCount; ++i) {
-      String ssid = nets[i].ssid;
-      ssid.replace(",", "_");
+      String ssid = csvCell(nets[i].ssid);
       file.printf("%s,%s,%s,%s,%u,%d,%d,%s\n", timestampText().c_str(), ssid.c_str(), nets[i].bssid.c_str(),
                   vendorName(nets[i].bssid).c_str(), nets[i].channel, static_cast<int>(nets[i].rssi),
                   quality(nets[i].rssi), authCode(nets[i].auth).c_str());
@@ -867,7 +879,7 @@ void logToSd() {
     File historyFile = SD.open("/wifi-history.csv", FILE_APPEND);
     if (historyFile) {
       int current = findSelected();
-      String historySsid = selectedSsid; historySsid.replace(",", "_");
+      String historySsid = csvCell(selectedSsid);
       historyFile.printf("%s,%s,%s,%d,%d,%d,%d,%d\n", timestampText().c_str(), historySsid.c_str(),
                          selectedBssid.c_str(), current >= 0 ? nets[current].channel : 0,
                          current >= 0 ? static_cast<int>(nets[current].rssi) : -100, current >= 0,
@@ -930,7 +942,7 @@ String currentCsv() {
   String out = "timestamp,ssid,bssid,vendor,channel,rssi,quality,security\n";
   out.reserve(4500);
   for (int i = 0; i < netCount; ++i) {
-    String ssid = nets[i].ssid; ssid.replace(",", "_");
+    String ssid = csvCell(nets[i].ssid);
     out += timestampText() + ',' + ssid + ',' + nets[i].bssid + ',' + vendorName(nets[i].bssid) + ',' +
            String(nets[i].channel) + ',' + String(nets[i].rssi) + ',' + String(quality(nets[i].rssi)) + ',' +
            authCode(nets[i].auth) + '\n';
@@ -941,8 +953,9 @@ String currentCsv() {
 String historyCsv() {
   String out = "sample,ssid,bssid,channel,rssi\n";
   out.reserve(2500);
+  String ssid = csvCell(selectedSsid);
   for (int i = 0; i < historyCount; ++i) {
-    out += String(i + 1) + ',' + selectedSsid + ',' + selectedBssid + ',' + String(historyChannels[i]) + ',' +
+    out += String(i + 1) + ',' + ssid + ',' + selectedBssid + ',' + String(historyChannels[i]) + ',' +
            String(history[i]) + '\n';
   }
   return out;

@@ -10,6 +10,7 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 - Escaped control characters and HTML metacharacters in scanned network names
   before rendering them in the local web dashboard.
+- Quote SSIDs in CSV exports and neutralize leading spreadsheet formula markers.
 
 ## [2.2.0] - 2026-09-01
 
