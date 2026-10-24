@@ -231,6 +231,31 @@ String timestampText() {
   return String(text);
 }
 
+bool parseBoundedInteger(const String &raw, int64_t minimum, int64_t maximum, int64_t &result) {
+  if (!raw.length()) return false;
+  size_t position = 0;
+  bool negative = false;
+  if (raw.charAt(0) == '-') {
+    negative = true;
+    position = 1;
+  }
+  if (position == raw.length()) return false;
+
+  uint64_t value = 0;
+  for (; position < raw.length(); ++position) {
+    const char character = raw.charAt(position);
+    if (character < '0' || character > '9') return false;
+    const uint8_t digit = static_cast<uint8_t>(character - '0');
+    if (value > (10000000000ULL - digit) / 10ULL) return false;
+    value = value * 10ULL + digit;
+  }
+
+  const int64_t signedValue = negative ? -static_cast<int64_t>(value) : static_cast<int64_t>(value);
+  if (signedValue < minimum || signedValue > maximum) return false;
+  result = signedValue;
+  return true;
+}
+
 void setLed(bool red, bool green, bool blue) {
   digitalWrite(LED_RED, red ? LOW : HIGH);
   digitalWrite(LED_GREEN, green ? LOW : HIGH);
@@ -1001,14 +1026,22 @@ void prepareWebRoutes() {
     web.send(200, "text/csv", historyCsv());
   });
   web.on("/api/time", HTTP_POST, []() {
-    if (web.hasArg("epoch")) {
-      epochAtSync = strtoull(web.arg("epoch").c_str(), nullptr, 10);
-      timezoneOffsetMinutes = web.hasArg("offset") ? web.arg("offset").toInt() : 0;
-      millisAtSync = millis();
-      timeSynced = epochAtSync > 1700000000ULL;
-      saveSettings();
+    int64_t epoch = 0;
+    int64_t offset = 0;
+    const bool validEpoch = web.hasArg("epoch") &&
+      parseBoundedInteger(web.arg("epoch"), 1700000001LL, 4102444800LL, epoch);
+    const bool validOffset = !web.hasArg("offset") ||
+      parseBoundedInteger(web.arg("offset"), -840, 720, offset);
+    if (!validEpoch || !validOffset) {
+      web.send(400, "application/json", "{\"error\":\"invalid time parameters\"}");
+      return;
     }
-    web.send(200, "text/plain", timeSynced ? "OK" : "INVALID");
+    epochAtSync = static_cast<uint64_t>(epoch);
+    timezoneOffsetMinutes = static_cast<int>(offset);
+    millisAtSync = millis();
+    timeSynced = true;
+    saveSettings();
+    web.send(200, "text/plain", "OK");
   });
   web.on("/api/settings", HTTP_POST, []() {
     if (web.hasArg("scan")) scanMs = constrain(web.arg("scan").toInt(), 3000, 60000);
