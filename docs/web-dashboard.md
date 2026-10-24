@@ -19,6 +19,10 @@ device. Later SD scan entries then use local ISO-like timestamps. The ESP32 has
 no RTC, so the synchronized time is valid only until reboot. Before sync, the
 device uses `U+seconds` since startup.
 
+The device validates both values before changing its clock. Malformed
+timestamps and timezone offsets outside UTC−12 to UTC+14 receive HTTP 400 and
+leave the last valid clock state unchanged.
+
 ## Local API
 
 | Method | Path | Purpose |
