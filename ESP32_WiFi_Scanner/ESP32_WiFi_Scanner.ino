@@ -1044,7 +1044,26 @@ void prepareWebRoutes() {
     web.send(200, "text/plain", "OK");
   });
   web.on("/api/settings", HTTP_POST, []() {
-    if (web.hasArg("scan")) scanMs = constrain(web.arg("scan").toInt(), 3000, 60000);
+    int64_t requestedScan = scanMs;
+    int64_t requestedBrightness = brightnessPercent();
+    const auto validFlag = [](const String &value) { return value == "0" || value == "1"; };
+    const bool validScan = !web.hasArg("scan") ||
+      parseBoundedInteger(web.arg("scan"), 3000, 60000, requestedScan);
+    const bool validBrightness = !web.hasArg("brightness") ||
+      parseBoundedInteger(web.arg("brightness"), 0, 100, requestedBrightness);
+    const bool validGroups = !web.hasArg("groups") || validFlag(web.arg("groups"));
+    const bool validHidden = !web.hasArg("hidden") || validFlag(web.arg("hidden"));
+    const bool validLight = !web.hasArg("light") || validFlag(web.arg("light"));
+    const bool validSd = !web.hasArg("sd") || validFlag(web.arg("sd"));
+    const bool validLanguage = !web.hasArg("language") ||
+      web.arg("language") == "de" || web.arg("language") == "en";
+    if (!validScan || !validBrightness || !validGroups || !validHidden ||
+        !validLight || !validSd || !validLanguage) {
+      web.send(400, "application/json", "{\"error\":\"invalid settings parameters\"}");
+      return;
+    }
+
+    if (web.hasArg("scan")) scanMs = static_cast<uint32_t>(requestedScan);
     if (web.hasArg("groups")) groupSsids = web.arg("groups") == "1";
     if (web.hasArg("hidden")) showHidden = web.arg("hidden") == "1";
     if (web.hasArg("light")) lightTheme = web.arg("light") == "1";
@@ -1054,7 +1073,7 @@ void prepareWebRoutes() {
     }
     if (web.hasArg("sd")) { sdLogging = web.arg("sd") == "1"; if (sdLogging) ensureSd(); }
     if (web.hasArg("brightness")) {
-      brightness = brightnessFromPercent(web.arg("brightness").toInt());
+      brightness = brightnessFromPercent(static_cast<int>(requestedBrightness));
       applyBrightness();
     }
     page = 0;
