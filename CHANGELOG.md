@@ -8,6 +8,8 @@ project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Reject malformed web settings atomically instead of silently coercing them
+  into unrelated scan, display, or logging values.
 - Escaped control characters and HTML metacharacters in scanned network names
   before rendering them in the local web dashboard.
 - Quote SSIDs in CSV exports and neutralize leading spreadsheet formula markers.
